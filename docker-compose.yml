@@ -1,0 +1,45 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      DATABASE_URL: ${DATABASE_URL:-}
+      RSS_FEED_URLS: ${RSS_FEED_URLS:-[]}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
+      OLLAMA_REQUEST_TIMEOUT_SECONDS: ${OLLAMA_REQUEST_TIMEOUT_SECONDS:-60}
+      AI_REQUEST_TIMEOUT_SECONDS: ${AI_REQUEST_TIMEOUT_SECONDS:-12}
+      CORS_ORIGINS: '["http://localhost:5173"]'
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+    depends_on:
+      - backend
+
+  scheduler:
+    build: .
+    command: ["python", "-m", "backend.app.scheduler"]
+    profiles: ["scheduler"]
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      DATABASE_URL: ${DATABASE_URL:-}
+      RSS_FEED_URLS: ${RSS_FEED_URLS:-[]}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
+      OLLAMA_REQUEST_TIMEOUT_SECONDS: ${OLLAMA_REQUEST_TIMEOUT_SECONDS:-60}
+      AI_REQUEST_TIMEOUT_SECONDS: ${AI_REQUEST_TIMEOUT_SECONDS:-12}
+      SCHEDULED_INGESTION_ENABLED: ${SCHEDULED_INGESTION_ENABLED:-false}
+      SCHEDULED_INGESTION_KEYWORDS: ${SCHEDULED_INGESTION_KEYWORDS:-[]}
+      SCHEDULED_INGESTION_INTERVAL_MINUTES: ${SCHEDULED_INGESTION_INTERVAL_MINUTES:-360}
+      SCHEDULED_INGESTION_LIMIT: ${SCHEDULED_INGESTION_LIMIT:-50}
+      SCHEDULED_INGESTION_SOURCES: ${SCHEDULED_INGESTION_SOURCES:-["hacker_news","rss","youtube"]}
